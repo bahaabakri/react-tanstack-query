@@ -6,18 +6,18 @@ import {fetchEvents} from "../../util/api.js"
 export default function NewEventsSection() {
 
   const {
-    data, isPending, error,
+    data, isPending: isLoading, error,
   } =
   useQuery({
     queryKey: ['events'],
     queryFn: fetchEvents,
-    staleTime: 10000,
+    // staleTime: 10000,
     // gcTime: 5000
   })
 
   let content;
 
-  if (isPending) {
+  if (isLoading) {
     content = <LoadingIndicator />;
   }
 
