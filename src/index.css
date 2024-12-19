@@ -236,7 +236,10 @@ ul {
   height: 100%;
   object-fit: cover;
 }
-
+#event-loader-wrapper, #event-error-wrapper {
+  width: fit-content;
+  margin: auto;
+}
 #event-details header {
   width: 40rem;
   margin: 2rem auto;
