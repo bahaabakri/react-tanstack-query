@@ -6,38 +6,54 @@ import { deleteEvent, fetchEvent } from "../../util/api.js";
 import LoadingIndicator from "../UI/LoadingIndicator.jsx";
 import ErrorBlock from "../UI/ErrorBlock.jsx";
 import {queryClient} from "../../util/api.js"
+import { useState } from "react";
+import Modal from "../UI/Modal.jsx"
 export default function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate()
+  const [isDeletePopupOpened, setIsDeletePopupOpen] = useState(false)
   const {
     data: event,
     isLoading: isLoadingGetEvent,
     error: errorGetEvent,
     isError: isErrorGetEvent,
   } = useQuery({
-    queryKey: ["event", { id }],
+    queryKey: ["events", { id }],
     queryFn: ({ signal }) => fetchEvent({ signal, id }),
   });
 
   const { 
-    // isLoading:isLoadingDeleteEvent,
-    // error: errorDeleteEvent,
-    // isError: isErrorDeleteEvent,
+    isPending:isLoadingDeleteEvent,
+    error: errorDeleteEvent,
+    isError: isErrorDeleteEvent,
     mutate: mutateDeleteEvent 
   } = useMutation({
-    mutationFn: () => deleteEvent({id }),
+    mutationFn: deleteEvent,
     onSuccess: () => {
-      navigate('/events')
       queryClient.invalidateQueries({
-        queryKey: ['events']
+        queryKey: ['events'],
+        refetchType: 'none'
       })
+      navigate('/events')
     },
   });
 
+  const onStartDeleteEvent = () => {
+    setIsDeletePopupOpen(true)
+  }
   const onDeleteEvent = () => {
-    if(window.confirm(`Are you sure want to delete ${event.title} event?`)) {
-      mutateDeleteEvent()
-    }
+    mutateDeleteEvent({id})
+  }
+  const onCancelDeleteEvent = () => {
+    setIsDeletePopupOpen(false)
+  }
+  let formatedDate
+  if (event) {
+    formatedDate = new Date(event.date).toLocaleDateString('en-US', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    })
   }
   return (
     <>
@@ -60,12 +76,12 @@ export default function EventDetails() {
           />
         </div>
       )}
-      {event && (
-        <article id="event-details">
+      {event && 
+        (<article id="event-details">
           <header>
             <h1>{event.title}</h1>
             <nav>
-              <button onClick={onDeleteEvent}>Delete</button>
+              <button onClick={onStartDeleteEvent}>Delete</button>
               <Link to="edit">Edit</Link>
             </nav>
           </header>
@@ -74,8 +90,8 @@ export default function EventDetails() {
             <div id="event-details-info">
               <div>
                 <p id="event-details-location">{event.location}</p>
-                <time dateTime={`${event.date} ${event.time}`}>
-                  {event.date} {event.time}
+                <time dateTime={`${formatedDate} ${event.time}`}>
+                  {formatedDate} @ {event.time}
                 </time>
               </div>
               <p id="event-details-description">{event.description}</p>
@@ -83,6 +99,27 @@ export default function EventDetails() {
           </div>
         </article>
       )}
+      {
+        isDeletePopupOpened &&
+        <Modal onClose={onCancelDeleteEvent}>
+          {isErrorDeleteEvent && <ErrorBlock title="An error occurred" message={isErrorDeleteEvent?.info?.message} />}
+          <p>Are you sure want to delete {event.title} permanently ?</p>
+          <p className="form-actions">
+          {isLoadingDeleteEvent ? 'Submitting...' :
+          <>
+            <button onClick={onCancelDeleteEvent} className="button-text">
+              Cancel
+            </button>
+            <button onClick={onDeleteEvent} className="button">
+              Delete
+            </button>
+          </>
+          }
+          </p>
+
+
+        </Modal>
+      }
     </>
   );
 }
