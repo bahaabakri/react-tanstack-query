@@ -102,7 +102,7 @@ export default function EventDetails() {
       {
         isDeletePopupOpened &&
         <Modal onClose={onCancelDeleteEvent}>
-          {isErrorDeleteEvent && <ErrorBlock title="An error occurred" message={isErrorDeleteEvent?.info?.message} />}
+          {isErrorDeleteEvent && <ErrorBlock title="An error occurred" message={errorDeleteEvent?.info?.message} />}
           <p>Are you sure want to delete {event.title} permanently ?</p>
           <p className="form-actions">
           {isLoadingDeleteEvent ? 'Submitting...' :
